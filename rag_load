@@ -1,0 +1,25 @@
+import pandas as pd
+
+def load_nba_dataset(csv_path="nba_players.csv"):
+    # Load dataset
+    df = pd.read_csv(csv_path)
+
+    # Select only 200 rows and 10 columns
+    df = df.head(200).iloc[:, :10]
+
+    # Convert all columns to text (string)
+    df = df.astype(str)
+
+    # Create text documents
+    docs = []
+    for idx, row in df.iterrows():
+        text = " | ".join([f"{col}: {row[col]}" for col in df.columns])
+        docs.append({"id": str(idx), "text": text})
+
+    return docs
+
+
+if __name__ == "__main__":
+    docs = load_nba_dataset("nba_players.csv")
+    print("Loaded", len(docs), "documents")
+    print(docs[0])
