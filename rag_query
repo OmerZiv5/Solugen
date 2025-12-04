@@ -1,0 +1,66 @@
+
+import os
+import chromadb
+from chromadb.config import Settings, DEFAULT_TENANT, DEFAULT_DATABASE
+from chromadb.utils import embedding_functions
+from openai import OpenAI
+import unicodedata
+
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
+
+SIMILARITY_THRESHOLD = 0.2
+TOP_K = 5
+PERSIST_DIR = "./chroma_db"  # must match the build_chroma persist_dir
+
+### ---- Text Normalization ---- ###
+def normalize_text(text):
+    """
+    Normalize text to NFC and replace problematic characters (like non-breaking hyphen)
+    """
+    text = unicodedata.normalize("NFC", text)
+    text = text.replace("\u2011", "-")  # replace non-breaking hyphen with normal hyphen
+    return text
+
+### ---- Query RAG ---- ###
+def query_rag(question):
+    # PersistentClient for disk-based ChromaDB
+    chroma_client = chromadb.PersistentClient(
+        path=PERSIST_DIR,
+        settings=Settings(),
+        tenant=DEFAULT_TENANT,
+        database=DEFAULT_DATABASE
+    )
+
+    collection = chroma_client.get_or_create_collection("nba_rag")
+
+    ef = embedding_functions.OpenAIEmbeddingFunction(
+        api_key=api_key,
+        model_name="text-embedding-3-small"
+    )
+
+    question = normalize_text(question)
+    q_emb = ef([question])[0]
+
+    results = collection.query(
+        query_embeddings=[q_emb],
+        n_results=TOP_K,
+        include=["documents", "distances"]
+    )
+
+    filtered = []
+    for doc, dist in zip(results["documents"][0], results["distances"][0]):
+        similarity = 1 - dist  # convert distance → similarity (cosine)
+        if similarity >= SIMILARITY_THRESHOLD:
+            filtered.append((similarity, doc))
+
+    return filtered
+
+
+if __name__ == "__main__":
+    question = "Randy Livingston team"
+    ctx = query_rag(question)
+
+    print("Retrieved Context:")
+    for sim, chunk in ctx:
+        print(f"\nSimilarity {sim:.3f}:\n{chunk}")
