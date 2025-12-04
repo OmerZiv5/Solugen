@@ -1,0 +1,6 @@
+import kagglehub
+
+# Download selected version
+path = kagglehub.dataset_download("mayabennett03/nba-historical-player-data-1996-2023/versions/1")
+
+print("Path to dataset files:", path)
