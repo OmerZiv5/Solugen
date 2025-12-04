@@ -14,7 +14,7 @@ client = OpenAI(api_key=api_key)
 
 # ChromaDB settings
 PERSIST_DIR = "./chroma_db"
-SIMILARITY_THRESHOLD = 0.01
+SIMILARITY_THRESHOLD = 0.2
 TOP_K = 5
 
 # Normalize text
