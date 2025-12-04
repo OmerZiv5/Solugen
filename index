@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NBA RAG Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+        input[type=text] { width: 80%; padding: 8px; font-size: 16px; }
+        input[type=submit] { padding: 8px 16px; font-size: 16px; }
+        .result { border: 1px solid #ccc; padding: 10px; margin-top: 10px; border-radius: 5px; }
+        .similarity { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>NBA RAG Search</h1>
+    <form method="POST">
+        <input type="text" name="question" placeholder="Type your question..." value="{{ question }}" required>
+        <input type="submit" value="Search">
+    </form>
+
+    {% if results %}
+        <h2>Top {{ results|length }} Results:</h2>
+        {% for sim, doc in results %}
+            <div class="result">
+                <span class="similarity">Similarity: {{ sim | round(3) }}</span>
+                <p>{{ doc }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>
